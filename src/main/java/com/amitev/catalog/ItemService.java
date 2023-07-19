@@ -27,6 +27,15 @@ public class ItemService {
         return toItem(entity);
     }
 
+    @Transactional
+    public void update(long id, Item item) {
+        var entity = new ItemEntity();
+        BeanUtils.copyProperties(item, entity);
+        entity.setId(id);
+
+        repository.save(entity);
+    }
+
     public Item get(long id) {
         var entity = repository.findById(id);
 

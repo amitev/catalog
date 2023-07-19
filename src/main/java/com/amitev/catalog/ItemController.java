@@ -16,6 +16,11 @@ public class ItemController {
         return itemService.create(item);
     }
 
+    @PostMapping("/{id}")
+    public void update(@PathVariable long id, @Validated @RequestBody Item item) {
+        itemService.update(id, item);
+    }
+
     @GetMapping(path = "/{id}")
     public Item get(@PathVariable long id) {
         return itemService.get(id);

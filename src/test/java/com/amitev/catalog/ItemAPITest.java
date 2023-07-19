@@ -39,18 +39,11 @@ class ItemAPITest {
     @Test
     @SneakyThrows
     void shouldCreateItems() {
-        var item = """
-                {
-                	"name":"Soccer Ball",
-                	"description":"Ball for playing soccer",
-                	"price":10.5,
-                	"amount":25
-                }
-                """;
+        var itemJson = toJson(new Item(null, "Soccer Ball", "Ball for playing soccer", BigDecimal.valueOf(10.5), 25));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/items")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(item))
+                        .content(itemJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value("Soccer Ball"))
@@ -63,18 +56,11 @@ class ItemAPITest {
     @Test
     @SneakyThrows
     public void shouldFetchById() {
-        var item = """
-                {
-                	"name":"Test item",
-                	"description":"test",
-                	"price":10.5,
-                	"amount":25
-                }
-                """;
+        var itemJson = toJson(new Item(null, "Test item", "test", BigDecimal.valueOf(10.5), 25));
 
         var response = mockMvc.perform(MockMvcRequestBuilders.post("/items")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(item))
+                        .content(itemJson))
                 .andExpect(status().isOk()).andReturn().getResponse();
 
         var id = objectMapper.readTree(response.getContentAsString()).get("id");
@@ -117,6 +103,26 @@ class ItemAPITest {
                 .andReturn().getResponse();
     }
 
+    @DisplayName("should update an item by its id")
+    @Test
+    @SneakyThrows
+    public void shouldUpdateById() {
+        var item = new Item(null, "test", "test", BigDecimal.ONE, 0);
+
+        var id = itemService.create(item).getId();
+
+        item.setName("Updated item");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/items/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(item)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/items/" + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Updated item"));
+    }
+
     @DisplayName("should delete an item by its id")
     @Test
     @SneakyThrows
@@ -130,6 +136,17 @@ class ItemAPITest {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/items/" + id))
                 .andExpect(status().isNotFound());
+    }
+
+    private String toJson(Item item) {
+        return """
+                {
+                	"name":"%s",
+                	"description":"%s",
+                	"price":%s,
+                	"amount": %d
+                }
+                """.formatted(item.getName(), item.getDescription(), item.getPrice(), item.getAmount());
     }
 
 }
